@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adfu-tool"
+version = "1.0.0"
+description = "Community recovery and diagnostics tool for Actions Semiconductor ADFU bootROM devices (read-only ROM/SRAM dump over the vendor protocol)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+keywords = ["actions", "adfu", "atj", "firmware", "dump", "recovery", "mips"]
+classifiers = [
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Hardware",
+]
+dependencies = [
+    "pyusb>=1.2",
+    "libusb-package>=0.0.22; sys_platform == 'win32'",
+]
+
+[project.scripts]
+adfu-tool = "adfu_tool.cli:main"
+
+[tool.setuptools]
+packages = ["adfu_tool"]
+
+[tool.setuptools.package-data]
+adfu_tool = ["data/*.bin", "data/*.json"]

@@ -1,0 +1,19 @@
+{
+  "loader": "rom32k_h9",
+  "identity": "V100R901",
+  "provenance": "Developed and proven live on an Actions Semiconductor V100 video greeting card on 2026-11-04 (experiment v100-rom32k-h9-001). Two complete 32 KiB passes over [BFC00000,BFC08000) matched byte-for-byte; the device recovered normally afterwards.",
+  "plaintext": {
+    "file": "rom32k_h9.bin",
+    "sha256": "c50bd82d354152cf9d7ca81bcaee8f62018a9837e4e6fe9a0f714457f8d75c7f",
+    "bytes": 2048
+  },
+  "encoded": {
+    "file": "rom32k_h9.encoded.bin",
+    "sha256": "163f85951547759fa48d3ac431f4041dba235893bc472c75d3b23a2d6527f97f",
+    "bytes": 2048
+  },
+  "source": ["../../loader_source/prefix.S", "../../loader_source/prefix.ld", "../../loader_source/build.py"],
+  "window": {"start": "0xBFC00000", "bytes_per_pass": 32768, "chunks_per_pass": 1024, "passes": 2},
+  "upload": {"address": "0xB4061000", "opcode": "0x05", "data_calls": "4 x 512 bytes"},
+  "execute": {"address": "0xB4061000", "opcode": "0x10"}
+}
