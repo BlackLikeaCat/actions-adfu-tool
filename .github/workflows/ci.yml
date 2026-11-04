@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: pip install pyusb
+      - name: Run offline test suite
+        run: python -m unittest discover -s tests -v
+
+  build-exe:
+    name: build single-file exe
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: pip install pyinstaller pyusb libusb-package
+      - name: Build adfu-tool.exe
+        run: python build_exe.py
+      - name: Attach exe to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/adfu-tool.exe
+          fail_on_unmatched_files: true

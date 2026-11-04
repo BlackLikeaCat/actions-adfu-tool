@@ -1,8 +1,15 @@
 # adfu-tool
 
+[![Release](https://img.shields.io/github/v/release/BlackLikeaCat/actions-adfu-tool?include_prereleases&label=release)](https://github.com/BlackLikeaCat/actions-adfu-tool/releases)
+[![CI](https://github.com/BlackLikeaCat/actions-adfu-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/BlackLikeaCat/actions-adfu-tool/actions/workflows/ci.yml)
+[![License: GPL v2+](https://img.shields.io/github/license/BlackLikeaCat/actions-adfu-tool)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)](https://github.com/BlackLikeaCat/actions-adfu-tool/releases)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
+
 Recovery and diagnostics for cheap Actions Semiconductor devices (video
 greeting cards, MP4/MP5 players, game consoles) that expose the vendor
 **ADFU download mode** over USB (`VID_10D6:PID_10D6`).
+
 
 It uploads a tiny read-only program into the chip's SRAM, executes it, and
 receives memory contents back over USB — recovering the **mask BootROM** and
@@ -24,6 +31,22 @@ ROM window saved to rom.bin (32768 bytes)
 SHA-256 6a69f70faf5e34889cc493f404f87cb249522b758f17a38d9bbd2d1b1e4ec9d5
 two passes matched, 5.4s total
 ```
+
+## Devices and chips
+
+**Proven end-to-end:** Actions Semiconductor **V100** (MIPS32 24KEc) 7-inch
+video greeting card — bootROM stamp `CADFUDP v09 F`, CPU PRId `00019655`,
+32 KiB mask BootROM dumped with two matching passes.
+
+**Expected to work** with other Actions/ATJ-family players that expose the
+same ADFU generation on `VID_10D6:PID_10D6` — the family includes parts
+marketed as ATS28xx, ATJ2073, ATJ2091, ATJ2115, ATJ2127, ATJ213x, ATJ2153,
+ATJ2243, ATJ2273, ATJ2279, ATJ2251S and rebranded variants ("S1 MP4 player",
+"Actions ATJ" boards, AliExpress video greeting cards). On unproven devices
+the tool checks the bootROM identity and warns; nothing is written to flash
+in any case. [Open an issue](https://github.com/BlackLikeaCat/actions-adfu-tool/issues)
+with your `adfu-tool info` output if a dump works or fails on your chip —
+the table below the release will grow.
 
 ## What it does
 
@@ -125,6 +148,52 @@ changes you do not need the toolchain: `dump-rom --window` patches the four
 immediate-only words in the sealed image and refuses if the surrounding
 skeleton does not match.
 
+## FAQ
+
+<details>
+<summary><b>Windows flags the exe (SmartScreen "unknown publisher")</b></summary>
+
+The binary is built with PyInstaller and is not code-signed. Verify the
+SHA-256 against the one in the release notes, then choose
+"More info → Run anyway". Building from source is always an option.
+</details>
+
+<details>
+<summary><b>The device isn't found in ADFU mode</b></summary>
+
+In ADFU mode the card re-enumerates as <code>VID_10D6:PID_10D6</code> with a
+vendor-class interface. On Windows, install a WinUSB driver for it once with
+<a href="https://zadig.akeo.ie/">Zadig</a> (the vendor's own
+<code>AdfuWinUSB.inf</code> also works). <code>adfu-tool devices</code> lists
+what is visible.
+</details>
+
+<details>
+<summary><b>Is my device supported? Will it write flash?</b></summary>
+
+See <em>Devices and chips</em> above. The tool is deliberately
+<b>read-only</b>: there is no flash write/erase command because no write
+path has been verified on real hardware, and guessed NAND sequences brick
+devices. See the safety model and roadmap below.
+</details>
+
+<details>
+<summary><b>Is this safe for my card?</b></summary>
+
+The loader is volatile SRAM code, nothing is retried on error, and no flash
+operation is ever sent. Every device this was tested on recovered with the
+normal unplug / power-cycle. Keep media backups anyway — not because the
+tool writes anything, but because electronics.
+</details>
+
+<details>
+<summary><b>My device has VID 10D6 but a different PID in normal mode</b></summary>
+
+Normal-mode PIDs vary by firmware (<code>PID_1101</code> is common). Only
+ADFU mode (<code>PID_10D6</code>) matters to this tool;
+<code>enter-adfu</code> switches from the normal drive letter.
+</details>
+
 ## Roadmap
 
 * NAND reader loader (page + OOB, hardware ECC reconstruction) — design work,
@@ -144,3 +213,29 @@ on that hardware; its SHA-256s are pinned in `adfu_tool/data/`.
 The image codec is derived from `meta/actions/encrypt.c` in the
 [gipi/teardown](https://github.com/gipi/teardown) repository, attributed to
 Amaury Pouly / Rockbox — licensed **GPL-2.0-or-later**, and so is this tool.
+
+## Contributing
+
+Issues and pull requests are welcome — especially:
+
+* dump reports from other Actions-family chips (success or failure; include
+  `adfu-tool info` output and the `.report.json` from a session),
+* a verified NAND reader loader design (page + OOB with the controller's
+  ECC layout) to become the next built-in feature,
+* platform improvements (macOS/Linux mode switching).
+
+Please keep discussions about *write/erase* paths grounded: they will only be
+accepted with evidence from sacrificial hardware.
+
+## Acknowledgments and related work
+
+* [Rockbox](https://www.rockbox.org/) / Amaury Pouly — the image codec
+  (`meta/actions/encrypt.c` via
+  [gipi/teardown](https://github.com/gipi/teardown)) and pioneering
+  Actions/ATJ RE documentation.
+* [kilicdev/actions_flash](https://github.com/kilicdev/actions_flash) —
+  related ATJ2127 NAND tooling.
+* The Chinese "production tool" ecosystem (Pad Tool / Product Tool) whose
+  USB protocol this tool speaks.
+
+Licensed **GPL-2.0-or-later** — see [LICENSE](LICENSE).
