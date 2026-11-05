@@ -180,6 +180,8 @@ def main(argv=None) -> int:
     p.add_argument("--identity-force", action="store_true")
     p.add_argument("--no-journal", action="store_true")
     p.add_argument("--force", action="store_true")
+    p = sub.add_parser("gui", help="launch the production-tool style graphical interface")
+    p.add_argument("--smoke", action="store_true", help="open, settle, exit (self-test)")
     p = sub.add_parser("upload", help="advanced: upload (and optionally execute) a loader image")
     p.add_argument("--file", required=True)
     p.add_argument("--address", type=lambda s: int(s, 0), default=0xB4061000)
@@ -198,6 +200,9 @@ def main(argv=None) -> int:
             return _info(args)
         if args.command == "dump-rom":
             return _dump_rom(args)
+        if args.command == "gui":
+            from .gui import run
+            return run(smoke=args.smoke)
         if args.command == "upload":
             return _upload(args)
         parser.print_help()

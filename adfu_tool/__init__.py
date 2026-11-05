@@ -7,4 +7,4 @@ vendor codec, opcode 0x10 execute, and the 80-byte frame stream emitted by
 the uploaded reader program. Read-only by design: nothing here writes or
 erases flash.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"

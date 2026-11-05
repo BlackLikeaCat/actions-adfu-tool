@@ -1,37 +1,47 @@
-"""Build the single-file adfu-tool.exe with PyInstaller (run from this directory)."""
+"""Build the single-file adfu-tool exes with PyInstaller (run from this directory)."""
 import subprocess
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+DIST = HERE / "dist"
+WORK = HERE / "build-exe"
 
 
-def main():
-    dist = HERE / "dist"
-    build = HERE / "build-exe"
+def build(name, entry, extra):
     command = [
         sys.executable, "-m", "PyInstaller",
         "--noconfirm", "--onefile", "--clean",
-        "--name", "adfu-tool",
-        "--distpath", str(dist), "--workpath", str(build), "--specpath", str(build),
+        "--name", name,
+        "--distpath", str(DIST), "--workpath", str(WORK), "--specpath", str(WORK),
         "--collect-all", "libusb_package",
         "--collect-data", "adfu_tool",
         "--hidden-import", "usb", "--hidden-import", "usb.core", "--hidden-import", "usb.util",
         "--hidden-import", "usb.backend.libusb1",
         "--paths", str(HERE),
-        str(HERE / "launcher.py"),
-    ]
+    ] + extra + [str(HERE / entry)]
     print(" ".join(command))
     subprocess.run(command, cwd=HERE, check=True)
-    exe = dist / "adfu-tool.exe"
+    exe = DIST / (name + ".exe")
     if not exe.exists():
-        raise SystemExit("exe missing after build")
-    print(f"\nbuilt {exe} ({exe.stat().st_size} bytes)")
+        raise SystemExit(name + ".exe missing after build")
+    print("\nbuilt", exe, "(" + str(exe.stat().st_size) + " bytes)")
+    return exe
+
+
+def main():
+    build("adfu-tool", "launcher.py", [])
+    gui_exe = build("adfu-tool-gui", "launcher_gui.py", ["--noconsole"])
     for args in (["--version"], ["devices"]):
-        result = subprocess.run([str(exe), *args], capture_output=True, text=True, timeout=60)
-        print(f"$ adfu-tool {' '.join(args)}\n{result.stdout}{result.stderr}")
+        result = subprocess.run([str(DIST / "adfu-tool.exe"), *args],
+                                capture_output=True, text=True, timeout=60)
+        print("$ adfu-tool", " ".join(args))
+        print(result.stdout, result.stderr)
         if result.returncode != 0:
-            raise SystemExit(f"smoke command failed: {args}")
+            raise SystemExit("smoke command failed: " + " ".join(args))
+    result = subprocess.run([str(gui_exe), "--smoke"], timeout=120)
+    if result.returncode != 0:
+        raise SystemExit("gui smoke failed")
 
 
 if __name__ == "__main__":

@@ -32,6 +32,18 @@ SHA-256 6a69f70faf5e34889cc493f404f87cb249522b758f17a38d9bbd2d1b1e4ec9d5
 two passes matched, 5.4s total
 ```
 
+## Prefer a GUI?
+
+`adfu-tool-gui.exe` (in [Releases](https://github.com/BlackLikeaCat/actions-adfu-tool/releases),
+next to the CLI exe) is a clean production-tool style interface — device
+panel, function buttons, progress bar, timestamped log — over the same
+sealed loader and the same strict read-only rules:
+
+![adfu-tool GUI](assets/gui-screenshot.png)
+
+A pip install can open the same window with `adfu-tool gui`; the CLI stays
+the scripting interface.
+
 ## Devices and chips
 
 **Proven end-to-end:** Actions Semiconductor **V100** (MIPS32 24KEc) 7-inch
